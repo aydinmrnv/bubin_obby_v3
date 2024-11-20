@@ -111,7 +111,7 @@ function spawnPowerUp() {
 function moveEnemy(enemy) {
   const angle = Math.atan2(smiley.y - enemy.y, smiley.x - enemy.x);
   if (invincible) {
-    // Move the monster away from the player
+    // Move the monster away from the player during invincibility
     enemy.x -= enemy.speed * Math.cos(angle);
     enemy.y -= enemy.speed * Math.sin(angle);
   } else {
@@ -177,7 +177,7 @@ function updateGame() {
     if (isCollision(smiley.x, smiley.y, smiley.radius, powerUp.x, powerUp.y, powerUp.radius)) {
       powerUps.splice(index, 1);
       invincible = true; // Activate invincibility
-      invincibleTimer = 100; // Set timer for 5 seconds (300 frames at 60fps)
+      invincibleTimer = 300; // Set timer for 5 seconds (300 frames at 60fps)
     }
   });
 
@@ -191,7 +191,9 @@ function updateGame() {
     // Check if collision with enemy occurs and handle invincibility
     if (isCollision(smiley.x, smiley.y, smiley.radius, enemy.x, enemy.y, enemy.radius)) {
       if (invincible) {
-        enemies.splice(index, 1); // Destroy monster if player is invincible
+        enemies.splice(index, 1); // Destroy the monster
+        score += 5; // Give player 5 points for killing a monster
+        spawnNewMonster(); // Spawn a new monster
       } else {
         deathSound.play();
         stopMusic();  // Stop the background music
@@ -237,11 +239,5 @@ startButton.addEventListener("click", () => {
   startSound.play();
   gameRunning = true;
   generateCarrots(initialCarrotCount);
-  spawnNewMonster();  // Initial monster spawn
-  updateGame();
-});
+  spawn
 
-function stopMusic() {
-  startSound.pause();
-  startSound.currentTime = 0;
-}
