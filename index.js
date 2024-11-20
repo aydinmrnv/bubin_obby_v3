@@ -12,7 +12,7 @@ const deathSound = document.getElementById("deathSound");
 
 let gameRunning = false;
 const smiley = { x: canvas.width / 2, y: canvas.height / 2, radius: 20, speed: 5 };
-const enemy = { x: 100, y: 100, radius: 25, speed: 2, poopInterval: 100 };
+const enemies = [];
 const carrots = [];
 const poops = [];
 const initialCarrotCount = 10;
@@ -78,7 +78,7 @@ function generateCarrots(count) {
   }
 }
 
-function moveEnemy() {
+function moveEnemy(enemy) {
   const angle = Math.atan2(smiley.y - enemy.y, smiley.x - enemy.x);
   enemy.x += enemy.speed * Math.cos(angle);
   enemy.y += enemy.speed * Math.sin(angle);
@@ -86,10 +86,20 @@ function moveEnemy() {
 
 function dropPoop() {
   poopTimer++;
-  if (poopTimer >= enemy.poopInterval) {
+  if (poopTimer >= 100) {  // Adjust this interval if necessary
     poops.push({ x: enemy.x, y: enemy.y, radius: 10 });
     poopTimer = 0;
   }
+}
+
+function spawnNewMonster() {
+  const newMonster = {
+    x: randomPosition(canvas.width),
+    y: randomPosition(canvas.height),
+    radius: 25,
+    speed: 2 + (score / 10) * 0.5, // Increase speed slightly for each new monster
+  };
+  enemies.push(newMonster);
 }
 
 function updateGame() {
@@ -100,9 +110,6 @@ function updateGame() {
   // Draw smiley
   drawCircle(smiley.x, smiley.y, smiley.radius, "green");
 
-  // Draw enemy
-  drawEnemy(enemy.x, enemy.y, enemy.radius);
-
   // Draw carrots
   carrots.forEach((carrot, index) => {
     drawCircle(carrot.x, carrot.y, carrot.radius, "orange");
@@ -110,6 +117,11 @@ function updateGame() {
     if (isCollision(smiley.x, smiley.y, smiley.radius, carrot.x, carrot.y, carrot.radius)) {
       carrots.splice(index, 1);
       score++;
+      
+      // Spawn a new enemy for every 10 points
+      if (score % 10 === 0) {
+        spawnNewMonster();
+      }
     }
   });
 
@@ -124,33 +136,33 @@ function updateGame() {
 
     if (isCollision(smiley.x, smiley.y, smiley.radius, poop.x, poop.y, poop.radius)) {
       poops.splice(index, 1);
-      score--;
+      score -= 5;  // Subtract 5 points when hitting a poop
+    }
+  });
+
+  // Draw enemies and move them
+  enemies.forEach((enemy, index) => {
+    drawEnemy(enemy.x, enemy.y, enemy.radius);
+    moveEnemy(enemy);
+
+    // Check if collision with enemy occurs
+    if (isCollision(smiley.x, smiley.y, smiley.radius, enemy.x, enemy.y, enemy.radius)) {
+      deathSound.play();
+      stopMusic();  // Stop the background music
+      gameRunning = false;
+      alert("Game Over! Your score: " + score);
+      location.reload();
     }
   });
 
   // Display score
   displayScore();
 
-  // Move enemy
-  moveEnemy();
-
-  // Drop poop
-  dropPoop();
-
-  // Check collision with enemy
-  if (isCollision(smiley.x, smiley.y, smiley.radius, enemy.x, enemy.y, enemy.radius)) {
-    deathSound.play();
-    gameRunning = false;
-    alert("Game Over! Your score: " + score);
-    location.reload();
-  }
-
   requestAnimationFrame(updateGame);
 }
 
 // Track mouse movement
 canvas.addEventListener("mousemove", (event) => {
-  // Update smiley position based on mouse coordinates
   smiley.x = event.clientX;
   smiley.y = event.clientY;
 });
@@ -158,8 +170,16 @@ canvas.addEventListener("mousemove", (event) => {
 // Start game
 startButton.addEventListener("click", () => {
   startScreen.style.display = "none";
+  startSound.loop = true;  // Loop the start music
   startSound.play();
   gameRunning = true;
   generateCarrots(initialCarrotCount);
+  spawnNewMonster();  // Initial monster spawn
   updateGame();
 });
+
+// Stop background music when game ends
+function stopMusic() {
+  startSound.pause();
+  startSound.currentTime = 0;  // Reset the music time to start from the beginning
+}
