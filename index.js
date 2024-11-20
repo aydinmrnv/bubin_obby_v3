@@ -13,6 +13,7 @@ const deathSound = document.getElementById("deathSound");
 let gameRunning = false;
 let invincible = false; // Flag for invincibility
 let invincibleTimer = 0; // Timer to count down the invincibility duration
+let flashTimer = 0; // Timer for flashing effect
 const smiley = { x: canvas.width / 2, y: canvas.height / 2, radius: 20, speed: 5 };
 const enemies = [];
 const carrots = [];
@@ -34,9 +35,11 @@ function drawCircle(x, y, radius, color) {
   ctx.closePath();
 }
 
-function drawEnemy(x, y, radius) {
-  drawCircle(x, y, radius, "red");
-
+function drawEnemy(x, y, radius, isFlashing) {
+  // Flashing effect: alternate between red and blue
+  const enemyColor = isFlashing ? (flashTimer % 30 < 15 ? "blue" : "red") : "red";
+  drawCircle(x, y, radius, enemyColor);
+  
   // Teeth
   const toothSize = radius / 5;
   const teethCount = 6;
@@ -107,8 +110,15 @@ function spawnPowerUp() {
 
 function moveEnemy(enemy) {
   const angle = Math.atan2(smiley.y - enemy.y, smiley.x - enemy.x);
-  enemy.x += enemy.speed * Math.cos(angle);
-  enemy.y += enemy.speed * Math.sin(angle);
+  if (invincible) {
+    // Move the monster away from the player
+    enemy.x -= enemy.speed * Math.cos(angle);
+    enemy.y -= enemy.speed * Math.sin(angle);
+  } else {
+    // Default behavior: move towards the player
+    enemy.x += enemy.speed * Math.cos(angle);
+    enemy.y += enemy.speed * Math.sin(angle);
+  }
 }
 
 function dropPoopFromMonster(enemy) {
@@ -167,13 +177,14 @@ function updateGame() {
     if (isCollision(smiley.x, smiley.y, smiley.radius, powerUp.x, powerUp.y, powerUp.radius)) {
       powerUps.splice(index, 1);
       invincible = true; // Activate invincibility
-      invincibleTimer = 200; // Set timer for 5 seconds (300 frames at 60fps)
+      invincibleTimer = 300; // Set timer for 5 seconds (300 frames at 60fps)
     }
   });
 
   // Draw enemies and move them
   enemies.forEach((enemy, index) => {
-    drawEnemy(enemy.x, enemy.y, enemy.radius);
+    flashTimer++;
+    drawEnemy(enemy.x, enemy.y, enemy.radius, invincible); // Pass flashing effect during invincibility
     moveEnemy(enemy);
     dropPoopFromMonster(enemy);
 
@@ -230,9 +241,7 @@ startButton.addEventListener("click", () => {
   updateGame();
 });
 
-// Stop background music when game ends
 function stopMusic() {
   startSound.pause();
   startSound.currentTime = 0;
 }
-
