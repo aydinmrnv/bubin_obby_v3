@@ -167,7 +167,7 @@ function updateGame() {
     if (isCollision(smiley.x, smiley.y, smiley.radius, powerUp.x, powerUp.y, powerUp.radius)) {
       powerUps.splice(index, 1);
       invincible = true; // Activate invincibility
-      invincibleTimer = 300; // Set timer for 5 seconds (300 frames at 60fps)
+      invincibleTimer = 200; // Set timer for 5 seconds (300 frames at 60fps)
     }
   });
 
