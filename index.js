@@ -84,11 +84,11 @@ function moveEnemy(enemy) {
   enemy.y += enemy.speed * Math.sin(angle);
 }
 
-function dropPoop() {
-  poopTimer++;
-  if (poopTimer >= 100) {  // Adjust this interval if necessary
+function dropPoopFromMonster(enemy) {
+  enemy.poopTimer++;
+  if (enemy.poopTimer >= 100) {  // Adjust interval for poop drop per monster
     poops.push({ x: enemy.x, y: enemy.y, radius: 10 });
-    poopTimer = 0;
+    enemy.poopTimer = 0;
   }
 }
 
@@ -98,6 +98,7 @@ function spawnNewMonster() {
     y: randomPosition(canvas.height),
     radius: 25,
     speed: 2 + (score / 10) * 0.5, // Increase speed slightly for each new monster
+    poopTimer: 0,  // Each monster has its own poop timer
   };
   enemies.push(newMonster);
 }
@@ -144,6 +145,7 @@ function updateGame() {
   enemies.forEach((enemy, index) => {
     drawEnemy(enemy.x, enemy.y, enemy.radius);
     moveEnemy(enemy);
+    dropPoopFromMonster(enemy); // Each monster drops poops independently
 
     // Check if collision with enemy occurs
     if (isCollision(smiley.x, smiley.y, smiley.radius, enemy.x, enemy.y, enemy.radius)) {
@@ -183,3 +185,4 @@ function stopMusic() {
   startSound.pause();
   startSound.currentTime = 0;  // Reset the music time to start from the beginning
 }
+
