@@ -14,7 +14,6 @@ let gameRunning = false;
 let invincible = false; // Flag for invincibility
 let invincibleTimer = 0; // Timer to count down the invincibility duration
 let flashTimer = 0; // Timer for flashing effect
-let monsterKilledWithPowerUp = false; // Flag to track if monster was killed with power-up
 const smiley = { x: canvas.width / 2, y: canvas.height / 2, radius: 20, speed: 5 };
 const enemies = [];
 const carrots = [];
@@ -178,8 +177,7 @@ function updateGame() {
     if (isCollision(smiley.x, smiley.y, smiley.radius, powerUp.x, powerUp.y, powerUp.radius)) {
       powerUps.splice(index, 1);
       invincible = true; // Activate invincibility
-      invincibleTimer = 300; // Set timer for 5 seconds (300 frames at 60fps)
-      monsterKilledWithPowerUp = false; // Reset the monster killed flag
+      invincibleTimer = 100; // Set timer for 5 seconds (300 frames at 60fps)
     }
   });
 
@@ -192,12 +190,9 @@ function updateGame() {
 
     // Check if collision with enemy occurs and handle invincibility
     if (isCollision(smiley.x, smiley.y, smiley.radius, enemy.x, enemy.y, enemy.radius)) {
-      if (invincible && !monsterKilledWithPowerUp) {
+      if (invincible) {
         enemies.splice(index, 1); // Destroy monster if player is invincible
-        score += 5; // Add 5 points for killing the monster
-        spawnNewMonster(); // Spawn a new monster after killing one
-        monsterKilledWithPowerUp = true; // Prevent killing more than one monster during invincibility
-      } else if (!invincible) {
+      } else {
         deathSound.play();
         stopMusic();  // Stop the background music
         gameRunning = false;
@@ -238,10 +233,11 @@ canvas.addEventListener("mousemove", (event) => {
 // Start game
 startButton.addEventListener("click", () => {
   startScreen.style.display = "none";
+  startSound.loop = true;
   startSound.play();
   gameRunning = true;
   generateCarrots(initialCarrotCount);
-  spawnNewMonster(); // Spawn the first monster
+  spawnNewMonster();  // Initial monster spawn
   updateGame();
 });
 
